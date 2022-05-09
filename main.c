@@ -5,6 +5,7 @@
 //func prototypes
 void start();
 void createacc();
+void filecheck();
 void login();
 void mainmenu();
 
@@ -29,6 +30,7 @@ struct contact{
 
 int main()
 {
+    system("color 5f");
     start();
 
     return 0;
@@ -46,9 +48,35 @@ void start(){
     scanf("%d",&n);
     switch(n){
     case 1: login();break;
-    case 2: createacc();break;
+    case 2: filecheck();break;
     case 3: return;
     default: printf("\t\tInvalid Input\n");break;
+    }
+}
+//filecheck
+void filecheck(){
+    FILE *check;
+    check=fopen("login.txt","r");
+    if(check==NULL)createacc();
+    else{
+        fseek(check,0,SEEK_END);
+        long size=ftell(check);
+        if(size==0)createacc();
+        else{
+        printf("\n\t\tAccount already exists. Do you want to overwrite?\n");
+        printf("\t\t!>Previous data will be lost<!\n\n");
+        printf("\t\t\t1) YES, overwrite\n\t\t\t2) Login to my acc\n\t\t\t3) Exit\n\n");
+        int select;
+        printf("\t\tEnter your choice: ");
+        scanf("%d",&select);
+
+        switch(select){
+            case 1: createacc();break;
+            case 2: login();break;
+            case 3: return;
+            default: printf("\t\t>Invalid Input\n");
+        }
+        }
     }
 }
 //3 new account creation
@@ -83,35 +111,76 @@ void login(){
     printf("\t\t****************************************************************\n");
     printf("\t\t*                         LOGIN                                *\n");
     printf("\t\t****************************************************************\n\n");
-    char user[100],pass[100];
-    printf("\t\t\tEnter login credentials: \n\n");
-    printf("\t\t\tusername: ");
-    scanf("%s",user);
-    printf("\t\t\tpassword: ");
-    scanf("%s",pass);
-
+    
     struct user u;
     FILE *signin;
     signin=fopen("login.txt","r");
-    fscanf(signin,"%s %s",u.username,u.password);
-
-    if(strcmp(u.username,user)==0&&strcmp(u.password,pass)==0){
-        printf("\t\tSuccessful login. Press any key to continue\n\n");
-        getchar();
-        mainmenu();
-    }
-    else{
-        printf("\n\t\tIncorrect Username or Password :( \n\n");
-        printf("\t\t\t1) Try again\n\t\t\t2) Exit\n");
-        int n;
-        printf("\t\tEnter your choice: ");
-        scanf("%d",&n);
-        switch(n){
-        case 1: login();break;
-        case 2: return;
-        default: printf("\t\tInvalid Input\n");break;
+    //checking for the file existence
+    if(signin==NULL){
+        printf("\t\tNo existing account found.\n\n");
+        printf("\t\t\t1) Create an account\n\t\t\t2) Exit\n\n");
+        printf("\t\tEnter Your Choice: ");
+        int choice;
+        scanf("%d",&choice);
+        switch(choice){
+            case 1: createacc();break;
+            case 2: return;
+            default: printf("\t\tInvalid Input\n");break;
         }
     }
+    //checking whether the file is empty
+    else{
+        fseek(signin,0,SEEK_END);
+        long size=ftell(signin);
+        if(size==0){
+            printf("\t\tNo existing account found.\n\n");
+            printf("\t\t\t1) Create an account\n\t\t\t2) Exit\n\n");
+            printf("\t\tEnter Your Choice: ");
+            int choice;
+            scanf("%d",&choice);
+            switch(choice){
+            case 1: createacc();break;
+            case 2: return;
+            default: printf("\t\tInvalid Input\n");break;
+            }
+        }
+        //taking login info from user
+        else
+        {
+        fseek(signin,0,SEEK_SET); //back to to begin of the file
+        
+        char user[100],pass[100];
+        printf("\t\t\tEnter login credentials: \n\n");
+        printf("\t\t\tusername: ");
+        scanf("%s",user);
+        printf("\t\t\tpassword: ");
+        scanf("%s",pass);
+
+        //matching the user input with the existing values in the file
+        fscanf(signin,"%s %s",u.username,u.password);
+
+        if(strcmp(u.username,user)==0&&strcmp(u.password,pass)==0){
+            printf("\t\tSuccessful login. Press any key to continue\n\n");
+            getchar(); //>not working..need to be fixed<//
+            mainmenu();
+        }
+        //if the input doesnt match
+        else{
+            printf("\n\t\t>Incorrect Username or Password :( \n");
+            printf("\t\t\t1) Try again\n\t\t\t2) Exit\n\n");
+            int n;
+            printf("\t\tEnter your choice: ");
+            scanf("%d",&n);
+            switch(n){
+            case 1: login();break;
+            case 2: return;
+            default: printf("\t\tInvalid Input\n");break;
+            }
+        }
+    }
+
+    }
+    
 }
 //4 mainmenu
 void mainmenu(){
@@ -148,13 +217,20 @@ void contactlist(){
     printf("\t\t****************************************************************\n");
     printf("\t\t*                      CONTACT LIST                            *\n");
     printf("\t\t****************************************************************\n\n");
-    struct contact c;
+    
+    struct contact c[100];
     FILE *fp;
     fp=fopen("contact.txt","r");
-    fscanf(fp,"%s %ld %s %s",c.name,&c.contact_no,c.address,c.mail);
-    printf("\t\t\t%s %ld %s %s\n",c.name,c.contact_no,c.address,c.mail);
 
-    printf("\n\n\n\t\t\t1) add another contact\n\t\t\t2) Return to mainmenu\n\t\t\t3) exit\n");
+    int i,count; //total number of contacts
+    fscanf(fp,"%d",&count);
+    for(i=0;i<count;i++)
+    fscanf(fp,"%s %ld %s %s",c[i].name,&c[i].contact_no,c[i].address,c[i].mail);
+    printf("\t\t\t      NAME     CONTACT NO        ADDRESS         E-MAILn\n");
+    for(i=0;i<count;i++)
+    printf("\t\t\t%10s %15ld %15s %15s\n",c[i].name,c[i].contact_no,c[i].address,c[i].mail);
+
+    printf("\n\n\n\t\t\t1) add another contact\n\t\t\t2) Return to mainmenu\n\t\t\t3) exit\n\n");
     int n;
     printf("\t\tEnter your choice: ");
     scanf("%d",&n);
@@ -172,20 +248,30 @@ void addcontact(){
     printf("\t\t*                    ADD NEW CONTACT                           *\n");
     printf("\t\t****************************************************************\n\n");
 
-    struct contact c;
+    struct contact c[100];
+    FILE *fr;
+    fr=fopen("contact.txt","r");
+
+    int i,count=0; //total number of contacts
+    fscanf(fr,"%d",&count);
+    for(i=0;i<count&&count>0;i++)
+    fscanf(fr,"%s %ld %s %s",c[i].name,&c[i].contact_no,c[i].address,c[i].mail);
 
     printf("\t\t\tEnter name : ");
-    scanf("%s",c.name);
+    scanf("%s",c[count].name);
     printf("\t\t\tEnter mobile no : ");
-    scanf("%ld",&c.contact_no);
+    scanf("%ld",&c[count].contact_no);
     printf("\t\t\tEnter Address: ");
-    scanf("%s",c.address);
+    scanf("%s",c[count].address);
     printf("\t\t\tEnter email : ");
-    scanf("%s",&c.mail);
+    scanf("%s",&c[count].mail);
+    count++;
 
     FILE *fp;
-    fp=fopen("contact.txt","a");
-    fprintf(fp,"%s %ld %s %s\n",c.name,c.contact_no,c.address,c.mail);
+    fp=fopen("contact.txt","w");
+    fprintf(fp,"%d\n",count);
+    for(i=0;i<count;i++)
+    fprintf(fp,"%s %ld %s %s\n",c[i].name,c[i].contact_no,c[i].address,c[i].mail);
     printf("\n\t\tContact added succesfully\n\n");
 
     printf("\t\t\t1) add another contact\n\t\t\t2) Return to mainmenu\n\t\t\t3) exit\n\n\n");
@@ -211,5 +297,3 @@ void editcontact(){
 void deleteall(){
 
 }
-
-
