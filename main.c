@@ -564,7 +564,7 @@ void deleteall(){
     printf("\t\t****************************************************************\n");
     printf("\t\t*                    ERASE EVERYTHING                          *\n");
     printf("\t\t****************************************************************\n\n");
-    printf("\n\t\tAre you sure want to erase everything?\n\t\t\t1) YES\n\t\t\t2) NO");
+    printf("\n\t\tAre you sure want to erase everything?\n\t\t\t1) YES\n\t\t\t2) NO\n\n");
     int select;
     printf("\t\tEnter your choice: ");
     scanf("%d",&select);
